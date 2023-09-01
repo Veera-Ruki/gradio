@@ -1,12 +1,12 @@
 ---
-title: OFA-Image_Caption
+title: Image_Caption
 emoji: 🖼
 colorFrom: red
 colorTo: indigo
-sdk: gradio
+sdk: streamlit
 app_file: app.py
 pinned: false
-duplicated_from: OFA-Sys/OFA-Image_Caption
+duplicated_from: OF
 ---
 # Configuration
 `title`: _string_
