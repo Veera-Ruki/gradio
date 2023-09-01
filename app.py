@@ -23,8 +23,7 @@ supported_languages = {
     "German": "de",
     # Add more languages as needed
 }
-os.system('wget https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt; '
-          'mkdir -p checkpoints; mv caption_large_best_clean.pt checkpoints/caption.pt')
+
 
 # Register caption task
 tasks.register_task('caption', CaptionTask)
@@ -34,6 +33,9 @@ use_cuda = torch.cuda.is_available()
 
 # Use FP16 only when GPU is available
 use_fp16 = False
+
+os.system('wget https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt; '
+          'mkdir -p checkpoints; mv caption_large_best_clean.pt checkpoints/caption.pt')
 
 # Constants
 SIGNUP_SUCCESS_MSG = "Signup successful!"
@@ -274,7 +276,7 @@ def main():
         outputs="auto",
         title="Main App",
         description="Select a tab: 'Login', 'Signup', or 'Generate Caption'",
-    ).launch()
+    ).launch(share=True)
 
 if __name__ == "__main__":
     main()
