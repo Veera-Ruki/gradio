@@ -118,4 +118,5 @@ description = "Image Caption. Upload your own image or click any one of the exam
 io = gr.Interface(fn=image_caption, inputs=gr.inputs.Image(type='pil'), outputs=gr.outputs.Textbox(label="Caption"),
                   title=title, description=description,
                   allow_flagging=False, allow_screenshot=False)
+
 io.launch(server_port)
