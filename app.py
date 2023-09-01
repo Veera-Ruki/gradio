@@ -1,35 +1,39 @@
 import os
-
-os.system('cd fairseq;'
-          'pip install ./; cd ..')
-os.system('ls -l')
-
 import torch
 import numpy as np
+from PIL import Image
+from torchvision import transforms
+import streamlit as st
 from fairseq import utils, tasks
 from fairseq import checkpoint_utils
 from utils.eval_utils import eval_step
 from tasks.mm_tasks.caption import CaptionTask
 from models.ofa import OFAModel
-from PIL import Image
-from torchvision import transforms
-import gradio as gr
 
 # Register caption task
 tasks.register_task('caption', CaptionTask)
-# turn on cuda if GPU is available
+
+# Turn on CUDA if GPU is available
 use_cuda = torch.cuda.is_available()
-# use fp16 only when GPU is available
+# Use fp16 only when GPU is available
 use_fp16 = False
 
-os.system('wget https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt; '
-          'mkdir -p checkpoints; mv caption_large_best_clean.pt checkpoints/caption.pt')
+# Download the pretrained checkpoint
+checkpoint_url = "https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt"
+checkpoint_path = "checkpoints/caption.pt"
 
-# Load pretrained ckpt & config
+if not os.path.isfile(checkpoint_path):
+    st.warning("Downloading the checkpoint...")
+    os.system(f"wget {checkpoint_url}")
+    os.system(f"mkdir -p checkpoints")
+    os.system(f"mv caption_large_best_clean.pt {checkpoint_path}")
+    st.success("Checkpoint downloaded successfully!")
+
+# Load pretrained checkpoint & config
 overrides = {"bpe_dir": "utils/BPE", "eval_cider": False, "beam": 5,
              "max_len_b": 16, "no_repeat_ngram_size": 3, "seed": 7}
 models, cfg, task = checkpoint_utils.load_model_ensemble_and_task(
-    utils.split_paths('checkpoints/caption.pt'),
+    utils.split_paths(checkpoint_path),
     arg_overrides=overrides
 )
 
@@ -45,6 +49,7 @@ for model in models:
 # Initialize generator
 generator = task.build_generator(models, cfg.generation)
 
+# Image preprocessing
 mean = [0.5, 0.5, 0.5]
 std = [0.5, 0.5, 0.5]
 
@@ -76,8 +81,25 @@ def encode_text(text, length=None, append_bos=False, append_eos=False):
     return s
 
 
-# Construct input for caption task
-def construct_sample(image: Image):
+# Function to turn FP32 to FP16
+def apply_half(t):
+    if t.dtype is torch.float32:
+        return t.to(dtype=torch.half)
+    return t
+
+
+# Function for image captioning
+def image_caption(image):
+    st.image(image, caption="Uploaded Image", use_column_width=True)
+    sample = construct_sample(image)
+    sample = utils.move_to_cuda(sample) if use_cuda else sample
+    sample = utils.apply_to_sample(apply_half, sample) if use_fp16 else sample
+    with torch.no_grad():
+        result, scores = eval_step(task, generator, models, sample)
+    return result[0]['caption']
+
+
+def construct_sample(image):
     patch_image = patch_resize_transform(image).unsqueeze(0)
     patch_mask = torch.tensor([True])
     src_text = encode_text(" what does the image describe?", append_bos=True, append_eos=True).unsqueeze(0)
@@ -94,30 +116,11 @@ def construct_sample(image: Image):
     return sample
 
 
-# Function to turn FP32 to FP16
-def apply_half(t):
-    if t.dtype is torch.float32:
-        return t.to(dtype=torch.half)
-    return t
+st.title("OFA-Image_Caption Streamlit App")
+st.write("Upload an image, and the app will generate a caption for it.")
+uploaded_image = st.file_uploader("Upload an image:", type=["jpg", "jpeg", "png"])
 
-
-# Function for image captioning
-def image_caption(Image):
-    sample = construct_sample(Image)
-    sample = utils.move_to_cuda(sample) if use_cuda else sample
-    sample = utils.apply_to_sample(apply_half, sample) if use_fp16 else sample
-    with torch.no_grad():
-        result, scores = eval_step(task, generator, models, sample)
-    return result[0]['caption']
-
-
-title = "OFA-Image_Caption"
-description = "Gradio Demo for OFA-Image_Caption. Upload your own image or click any one of the examples, and click " \
-              "\"Submit\" and then wait for the generated caption.  "
-article = "<p style='text-align: center'><a href='https://github.com/OFA-Sys/OFA' target='_blank'>OFA Github " \
-          "Repo</a></p> "
-examples = [['beatles.jpeg'], ['aurora.jpeg'], ['good_luck.png'], ['pokemons.jpg'], ['donuts.jpg']]
-io = gr.Interface(fn=image_caption, inputs=gr.inputs.Image(type='pil'), outputs=gr.outputs.Textbox(label="Caption"),
-                  title=title, description=description, article=article, examples=examples,
-                  allow_flagging=False, allow_screenshot=False)
-io.launch()
+if uploaded_image:
+    caption = image_caption(uploaded_image)
+    st.write("Generated Caption:")
+    st.write(caption)
