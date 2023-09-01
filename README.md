@@ -3,7 +3,7 @@ title: Image_Caption
 emoji: 🖼
 colorFrom: red
 colorTo: indigo
-sdk: streamlit
+sdk: gradio
 app_file: app.py
 pinned: false
 duplicated_from: OF
