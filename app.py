@@ -124,3 +124,4 @@ if uploaded_image:
     caption = image_caption(uploaded_image)
     st.write("Generated Caption:")
     st.write(caption)
+
