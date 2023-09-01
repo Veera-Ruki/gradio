@@ -4,15 +4,16 @@ os.system('cd fairseq;'
 os.system('ls -l')
 import torch
 import numpy as np
+from googletrans import Translator
 import sqlite3
-import gradio as gr
+from fairseq import utils, tasks
+from fairseq import checkpoint_utils
+from utils.eval_utils import eval_step
+from tasks.mm_tasks.caption import CaptionTask
+from models.ofa import OFAModel
 from PIL import Image
 from torchvision import transforms
-from googletrans import Translator
-from fairseq import utils, tasks, checkpoint_utils
-from fairseq.tasks.mm_tasks.caption import CaptionTask
-from models.ofa import OFAModel
-from utils.eval_utils import eval_step
+import gradio as gr
 
 
 # Supported languages for translation
