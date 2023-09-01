@@ -1,4 +1,9 @@
 import os
+os.system('cd fairseq;'
+          'pip install ./; cd ..')
+os.system('ls -l')
+os.system('wget https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt; '
+          'mkdir -p checkpoints; mv caption_large_best_clean.pt checkpoints/caption.pt')
 import torch
 import numpy as np
 import sqlite3
@@ -10,11 +15,7 @@ from fairseq import utils, tasks, checkpoint_utils
 from fairseq.tasks.mm_tasks.caption import CaptionTask
 from models.ofa import OFAModel
 from utils.eval_utils import eval_step
-os.system('cd fairseq;'
-          'pip install ./; cd ..')
-os.system('ls -l')
-os.system('wget https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt; '
-          'mkdir -p checkpoints; mv caption_large_best_clean.pt checkpoints/caption.pt')
+
 
 # Supported languages for translation
 supported_languages = {
