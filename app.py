@@ -2,8 +2,6 @@ import os
 os.system('cd fairseq;'
           'pip install ./; cd ..')
 os.system('ls -l')
-os.system('wget https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt; '
-          'mkdir -p checkpoints; mv caption_large_best_clean.pt checkpoints/caption.pt')
 import torch
 import numpy as np
 import sqlite3
@@ -25,6 +23,8 @@ supported_languages = {
     "German": "de",
     # Add more languages as needed
 }
+os.system('wget https://ofa-silicon.oss-us-west-1.aliyuncs.com/checkpoints/caption_large_best_clean.pt; '
+          'mkdir -p checkpoints; mv caption_large_best_clean.pt checkpoints/caption.pt')
 
 # Register caption task
 tasks.register_task('caption', CaptionTask)
